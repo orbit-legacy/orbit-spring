@@ -46,9 +46,9 @@ public class OrbitSpringConfiguration {
             stageBuilder.actorTTL(properties.getTimeToLiveInSeconds(), TimeUnit.SECONDS);
         }
 
-        if (properties.getMessagingTimeoutInMillis() != null) {
+        if (properties.getMessagingTimeoutInMilliseconds() != null) {
             Messaging orbitMessaging = new Messaging();
-            orbitMessaging.setResponseTimeoutMillis(properties.getMessagingTimeoutInMillis());
+            orbitMessaging.setResponseTimeoutMillis(properties.getMessagingTimeoutInMilliseconds());
             stageBuilder.messaging(orbitMessaging);
         }
 

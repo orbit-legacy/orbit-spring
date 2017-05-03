@@ -14,7 +14,7 @@ public class OrbitActorsProperties {
     private String clusterName;
     private String nodeName;
     private Stage.StageMode stageMode;
-    private Long messagingTimeoutInMillis;
+    private Long messagingTimeoutInMilliseconds;
     private Long timeToLiveInSeconds;
     private List<String> stickyHeaders;
 
@@ -42,12 +42,12 @@ public class OrbitActorsProperties {
         this.stageMode = mode;
     }
 
-    public Long getMessagingTimeoutInMillis() {
-        return messagingTimeoutInMillis;
+    public Long getMessagingTimeoutInMilliseconds() {
+        return messagingTimeoutInMilliseconds;
     }
 
-    public void setMessagingTimeoutInMillis(Long timeout) {
-        this.messagingTimeoutInMillis = timeout;
+    public void setMessagingTimeoutInMilliseconds(Long timeout) {
+        this.messagingTimeoutInMilliseconds = timeout;
     }
 
     public Long getTimeToLiveInSeconds() {
