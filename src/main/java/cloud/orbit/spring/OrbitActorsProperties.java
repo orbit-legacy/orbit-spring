@@ -41,7 +41,6 @@ public class OrbitActorsProperties {
     private String clusterName;
     private String nodeName;
     private Stage.StageMode stageMode;
-    private List<ActorExtension> extensions;
     private Long messagingTimeoutInMilliseconds;
     private Long timeToLiveInSeconds;
     private List<String> stickyHeaders;
@@ -78,14 +77,6 @@ public class OrbitActorsProperties {
 
     public void setStageMode(Stage.StageMode mode) {
         this.stageMode = mode;
-    }
-
-    public List<ActorExtension> getExtensions() {
-        return extensions;
-    }
-
-    public void setExtensions(final List<ActorExtension> extensions) {
-        this.extensions = extensions;
     }
 
     public Long getMessagingTimeoutInMilliseconds() {

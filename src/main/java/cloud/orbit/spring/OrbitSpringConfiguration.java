@@ -35,10 +35,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import cloud.orbit.actors.Stage;
-import cloud.orbit.actors.extensions.ActorExtension;
 import cloud.orbit.actors.runtime.Messaging;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -53,7 +51,8 @@ public class OrbitSpringConfiguration {
 
     @Bean
     public Stage stage(OrbitActorsProperties properties) {
-        Stage.Builder stageBuilder = new Stage.Builder();
+        Stage.Builder stageBuilder = new Stage.Builder()
+                .extensions(new SpringLifetimeExtension(factory));
 
         if (properties.getBasePackages() != null) {
             stageBuilder.basePackages(properties.getBasePackages());
@@ -71,12 +70,6 @@ public class OrbitSpringConfiguration {
         {
             stageBuilder.mode(properties.getStageMode());
         }
-
-        List<ActorExtension> actorExtensions = Arrays.asList(new SpringLifetimeExtension(factory));
-        if (properties.getExtensions() != null) {
-            actorExtensions.addAll(properties.getExtensions());
-        }
-        stageBuilder.extensions(actorExtensions.toArray(new ActorExtension[actorExtensions.size()]));
 
         if (properties.getTimeToLiveInSeconds() != null) {
             stageBuilder.actorTTL(properties.getTimeToLiveInSeconds(), TimeUnit.SECONDS);
