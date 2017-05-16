@@ -96,8 +96,8 @@ public class OrbitSpringConfiguration {
             stageBuilder.concurrentDeactivations(properties.getConcurrentDeactivations());
         }
 
-        if (properties.getDeactivationTimeoutMillis() != null) {
-            stageBuilder.deactivationTimeout(properties.getDeactivationTimeoutMillis(), TimeUnit.MILLISECONDS);
+        if (properties.getDeactivationTimeoutInMilliseconds() != null) {
+            stageBuilder.deactivationTimeout(properties.getDeactivationTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
         }
 
         Stage stage = stageBuilder.build();

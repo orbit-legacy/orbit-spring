@@ -46,7 +46,7 @@ public class OrbitActorsProperties {
     private Long timeToLiveInSeconds;
     private List<String> stickyHeaders;
     private Integer concurrentDeactivations;
-    private Long deactivationTimeoutMillis;
+    private Long deactivationTimeoutInMilliseconds;
 
     public String getBasePackages() {
         return basePackages;
@@ -120,11 +120,11 @@ public class OrbitActorsProperties {
         this.concurrentDeactivations = concurrentDeactivations;
     }
 
-    public Long getDeactivationTimeoutMillis() {
-        return deactivationTimeoutMillis;
+    public Long getDeactivationTimeoutInMilliseconds() {
+        return deactivationTimeoutInMilliseconds;
     }
 
-    public void setDeactivationTimeoutMillis(final Long deactivationTimeoutMillis) {
-        this.deactivationTimeoutMillis = deactivationTimeoutMillis;
+    public void setDeactivationTimeoutInMilliseconds(final Long deactivationTimeoutInMilliseconds) {
+        this.deactivationTimeoutInMilliseconds = deactivationTimeoutInMilliseconds;
     }
 }
