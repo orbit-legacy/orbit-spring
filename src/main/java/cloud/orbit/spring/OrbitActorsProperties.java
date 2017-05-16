@@ -54,16 +54,16 @@ public class OrbitActorsProperties {
         return nodeName;
     }
 
-    public void setNodeName(String name) {
-        nodeName = nodeName;
+    public void setNodeName(String nodeName) {
+        this.nodeName = nodeName;
     }
 
     public Stage.StageMode getStageMode() {
         return stageMode;
     }
 
-    public void setStageMode(Stage.StageMode mode) {
-        this.stageMode = mode;
+    public void setStageMode(Stage.StageMode stageMode) {
+        this.stageMode = stageMode;
     }
 
     public Long getMessagingTimeoutInMilliseconds() {
