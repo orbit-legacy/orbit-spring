@@ -44,13 +44,12 @@ class SpringLifetimeExtension implements LifetimeExtension {
     // Provides constructor injection for actors
     @Override
     public <T> T newInstance(Class<T> concreteClass) {
-        T instance = (T)beanFactory.createBean(concreteClass);
-        return instance;
+        return beanFactory.createBean(concreteClass);
     }
 
     // Provides property injection for actors
     @Override
-    public Task preActivation(AbstractActor actor) {
+    public Task<Void> preActivation(AbstractActor<?> actor) {
         beanFactory.autowireBeanProperties(actor, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE ,false);
         return Task.done();
     }
