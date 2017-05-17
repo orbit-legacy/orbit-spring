@@ -28,19 +28,31 @@
 
 package cloud.orbit.spring;
 
-import cloud.orbit.actors.Stage;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import cloud.orbit.actors.Stage;
 
 import java.util.List;
 
 @ConfigurationProperties(prefix = "orbit.actors")
 public class OrbitActorsProperties {
+    private String basePackages;
     private String clusterName;
     private String nodeName;
     private Stage.StageMode stageMode;
     private Long messagingTimeoutInMilliseconds;
     private Long timeToLiveInSeconds;
     private List<String> stickyHeaders;
+    private Integer concurrentDeactivations;
+    private Long deactivationTimeoutInMilliseconds;
+
+    public String getBasePackages() {
+        return basePackages;
+    }
+
+    public void setBasePackages(final String basePackages) {
+        this.basePackages = basePackages;
+    }
 
     public String getClusterName() {
         return clusterName;
@@ -88,5 +100,21 @@ public class OrbitActorsProperties {
 
     public void setStickyHeaders(List<String> headers) {
         this.stickyHeaders = headers;
+    }
+
+    public Integer getConcurrentDeactivations() {
+        return concurrentDeactivations;
+    }
+
+    public void setConcurrentDeactivations(final Integer concurrentDeactivations) {
+        this.concurrentDeactivations = concurrentDeactivations;
+    }
+
+    public Long getDeactivationTimeoutInMilliseconds() {
+        return deactivationTimeoutInMilliseconds;
+    }
+
+    public void setDeactivationTimeoutInMilliseconds(final Long deactivationTimeoutInMilliseconds) {
+        this.deactivationTimeoutInMilliseconds = deactivationTimeoutInMilliseconds;
     }
 }

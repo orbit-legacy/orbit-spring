@@ -28,13 +28,15 @@
 
 package cloud.orbit.spring;
 
-import cloud.orbit.actors.Stage;
-import cloud.orbit.actors.runtime.Messaging;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import cloud.orbit.actors.Stage;
+import cloud.orbit.actors.extensions.ActorExtension;
+import cloud.orbit.actors.runtime.Messaging;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -42,16 +44,22 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 @EnableConfigurationProperties(OrbitActorsProperties.class)
 public class OrbitSpringConfiguration {
-    @Autowired
-    AutowireCapableBeanFactory factory;
-
     @Autowired(required = false)
-    List<OrbitSpringConfigurationAddon> configAddons;
+    private List<OrbitSpringConfigurationAddon> configAddons;
 
     @Bean
-    public Stage stage(OrbitActorsProperties properties) {
+    public ActorExtension springLifecycleExtension(AutowireCapableBeanFactory factory) {
+      return new SpringLifetimeExtension(factory);
+    }
+
+    @Bean
+    public Stage stage(OrbitActorsProperties properties, List<ActorExtension> actorExtensions) {
         Stage.Builder stageBuilder = new Stage.Builder()
-            .extensions(new SpringLifetimeExtension(factory));
+                .extensions(actorExtensions.toArray(new ActorExtension[actorExtensions.size()]));
+
+        if (properties.getBasePackages() != null) {
+            stageBuilder.basePackages(properties.getBasePackages());
+        }
 
         if (properties.getClusterName() != null) {
             stageBuilder.clusterName(properties.getClusterName());
@@ -61,8 +69,7 @@ public class OrbitSpringConfiguration {
             stageBuilder.nodeName(properties.getNodeName());
         }
 
-        if (properties.getStageMode() != null)
-        {
+        if (properties.getStageMode() != null) {
             stageBuilder.mode(properties.getStageMode());
         }
 
@@ -78,6 +85,14 @@ public class OrbitSpringConfiguration {
 
         if (properties.getStickyHeaders() != null) {
             properties.getStickyHeaders().forEach(stageBuilder::stickyHeaders);
+        }
+
+        if (properties.getConcurrentDeactivations() != null) {
+            stageBuilder.concurrentDeactivations(properties.getConcurrentDeactivations());
+        }
+
+        if (properties.getDeactivationTimeoutInMilliseconds() != null) {
+            stageBuilder.deactivationTimeout(properties.getDeactivationTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
         }
 
         Stage stage = stageBuilder.build();
