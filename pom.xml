@@ -35,7 +35,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
     </parent>
 
     <artifactId>orbit-spring</artifactId>
-    <version>0.9.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>Orbit Spring</name>
 
     <scm>
