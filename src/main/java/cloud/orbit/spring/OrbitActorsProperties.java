@@ -36,7 +36,7 @@ import java.util.List;
 
 @ConfigurationProperties(prefix = "orbit.actors")
 public class OrbitActorsProperties {
-    private String basePackages;
+    private List<String> basePackages;
     private String clusterName;
     private String nodeName;
     private Stage.StageMode stageMode;
@@ -46,11 +46,11 @@ public class OrbitActorsProperties {
     private Integer concurrentDeactivations;
     private Long deactivationTimeoutInMilliseconds;
 
-    public String getBasePackages() {
+    public List<String> getBasePackages() {
         return basePackages;
     }
 
-    public void setBasePackages(final String basePackages) {
+    public void setBasePackages(final List<String> basePackages) {
         this.basePackages = basePackages;
     }
 
