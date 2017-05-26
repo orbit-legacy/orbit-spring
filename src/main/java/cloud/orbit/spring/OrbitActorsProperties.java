@@ -45,6 +45,7 @@ public class OrbitActorsProperties {
     private List<String> stickyHeaders;
     private Integer concurrentDeactivations;
     private Long deactivationTimeoutInMilliseconds;
+    private Integer executionPoolSize;
 
     public List<String> getBasePackages() {
         return basePackages;
@@ -116,5 +117,15 @@ public class OrbitActorsProperties {
 
     public void setDeactivationTimeoutInMilliseconds(final Long deactivationTimeoutInMilliseconds) {
         this.deactivationTimeoutInMilliseconds = deactivationTimeoutInMilliseconds;
+    }
+
+    public Integer getExecutionPoolSize()
+    {
+        return executionPoolSize;
+    }
+
+    public void setExecutionPoolSize(Integer executionPoolSize)
+    {
+        this.executionPoolSize = executionPoolSize;
     }
 }

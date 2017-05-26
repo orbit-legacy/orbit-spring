@@ -97,6 +97,11 @@ public class OrbitSpringConfiguration {
 
         Stage stage = stageBuilder.build();
 
+        // TODO: Replace this with the version in StageBuilder once it lands in Orbit 1.0.0-rc3
+        if(properties.getExecutionPoolSize() != null) {
+            stage.setExecutionPoolSize(properties.getExecutionPoolSize());
+        }
+
         if (configAddons != null) {
             configAddons.forEach(addon -> addon.configure(stage));
         }
