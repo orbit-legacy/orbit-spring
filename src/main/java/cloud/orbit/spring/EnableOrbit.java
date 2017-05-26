@@ -38,7 +38,8 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Documented
-@Import({OrbitBeanDefinitionRegistrar.class})
-public @interface EnableOrbit {
+@Import({ OrbitBeanDefinitionRegistrar.class })
+public @interface EnableOrbit
+{
     String[] value() default {};
 }

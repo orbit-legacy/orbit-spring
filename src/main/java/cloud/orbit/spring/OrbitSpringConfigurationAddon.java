@@ -30,6 +30,7 @@ package cloud.orbit.spring;
 
 import cloud.orbit.actors.Stage;
 
-public interface OrbitSpringConfigurationAddon {
+public interface OrbitSpringConfigurationAddon
+{
     void configure(Stage stage);
 }

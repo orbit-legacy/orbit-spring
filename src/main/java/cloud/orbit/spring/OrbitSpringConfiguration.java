@@ -43,66 +43,80 @@ import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EnableConfigurationProperties(OrbitActorsProperties.class)
-public class OrbitSpringConfiguration {
+public class OrbitSpringConfiguration
+{
     @Autowired(required = false)
     private List<OrbitSpringConfigurationAddon> configAddons;
 
     @Bean
-    public ActorExtension springLifecycleExtension(AutowireCapableBeanFactory factory) {
-      return new SpringLifetimeExtension(factory);
+    public ActorExtension springLifecycleExtension(AutowireCapableBeanFactory factory)
+    {
+        return new SpringLifetimeExtension(factory);
     }
 
     @Bean
-    public Stage stage(OrbitActorsProperties properties, List<ActorExtension> actorExtensions) {
+    public Stage stage(OrbitActorsProperties properties, List<ActorExtension> actorExtensions)
+    {
         Stage.Builder stageBuilder = new Stage.Builder()
                 .extensions(actorExtensions.toArray(new ActorExtension[actorExtensions.size()]));
 
-        if (properties.getBasePackages() != null) {
+        if (properties.getBasePackages() != null)
+        {
             stageBuilder.basePackages(properties.getBasePackages());
         }
 
-        if (properties.getClusterName() != null) {
+        if (properties.getClusterName() != null)
+        {
             stageBuilder.clusterName(properties.getClusterName());
         }
 
-        if (properties.getNodeName() != null) {
+        if (properties.getNodeName() != null)
+        {
             stageBuilder.nodeName(properties.getNodeName());
         }
 
-        if (properties.getStageMode() != null) {
+        if (properties.getStageMode() != null)
+        {
             stageBuilder.mode(properties.getStageMode());
         }
 
-        if (properties.getTimeToLiveInSeconds() != null) {
+        if (properties.getTimeToLiveInSeconds() != null)
+        {
             stageBuilder.actorTTL(properties.getTimeToLiveInSeconds(), TimeUnit.SECONDS);
         }
 
-        if (properties.getMessagingTimeoutInMilliseconds() != null) {
+        if (properties.getMessagingTimeoutInMilliseconds() != null)
+        {
             Messaging orbitMessaging = new Messaging();
             orbitMessaging.setResponseTimeoutMillis(properties.getMessagingTimeoutInMilliseconds());
             stageBuilder.messaging(orbitMessaging);
         }
 
-        if (properties.getStickyHeaders() != null) {
+        if (properties.getStickyHeaders() != null)
+        {
             properties.getStickyHeaders().forEach(stageBuilder::stickyHeaders);
         }
 
-        if (properties.getConcurrentDeactivations() != null) {
+        if (properties.getConcurrentDeactivations() != null)
+        {
             stageBuilder.concurrentDeactivations(properties.getConcurrentDeactivations());
         }
 
-        if (properties.getDeactivationTimeoutInMilliseconds() != null) {
+        if (properties.getDeactivationTimeoutInMilliseconds() != null)
+        {
             stageBuilder.deactivationTimeout(properties.getDeactivationTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
         }
 
         Stage stage = stageBuilder.build();
 
         // TODO: Replace this with the version in StageBuilder once it lands in Orbit 1.0.0-rc3
-        if(properties.getExecutionPoolSize() != null) {
+        if (properties.getExecutionPoolSize() != null)
+        {
             stage.setExecutionPoolSize(properties.getExecutionPoolSize());
         }
 
-        if (configAddons != null) {
+        if (configAddons != null)
+        {
             configAddons.forEach(addon -> addon.configure(stage));
         }
 
