@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "management.info.actors.enabled",
+      "description": "Enable ActorInfoContributorLifetimeExtension.",
+      "type": "java.lang.Boolean",
+      "defaultValue": true
+    }
+  ]
+}
