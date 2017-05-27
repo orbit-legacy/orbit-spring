@@ -30,6 +30,7 @@ package cloud.orbit.spring;
 import org.springframework.context.annotation.*;
 
 @Configuration
-@ComponentScan(basePackages = {"cloud.orbit.spring"})
-public class OrbitBeanDefinitionRegistrar {
+@ComponentScan(basePackages = { "cloud.orbit.spring" })
+public class OrbitBeanDefinitionRegistrar
+{
 }

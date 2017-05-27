@@ -35,7 +35,8 @@ import cloud.orbit.actors.Stage;
 import java.util.List;
 
 @ConfigurationProperties(prefix = "orbit.actors")
-public class OrbitActorsProperties {
+public class OrbitActorsProperties
+{
     private List<String> basePackages;
     private String clusterName;
     private String nodeName;
@@ -47,75 +48,93 @@ public class OrbitActorsProperties {
     private Long deactivationTimeoutInMilliseconds;
     private Integer executionPoolSize;
 
-    public List<String> getBasePackages() {
+    public List<String> getBasePackages()
+    {
         return basePackages;
     }
 
-    public void setBasePackages(final List<String> basePackages) {
+    public void setBasePackages(final List<String> basePackages)
+    {
         this.basePackages = basePackages;
     }
 
-    public String getClusterName() {
+    public String getClusterName()
+    {
         return clusterName;
     }
 
-    public void setClusterName(String clusterName) {
+    public void setClusterName(String clusterName)
+    {
         this.clusterName = clusterName;
     }
 
-    public String getNodeName() {
+    public String getNodeName()
+    {
         return nodeName;
     }
 
-    public void setNodeName(String nodeName) {
+    public void setNodeName(String nodeName)
+    {
         this.nodeName = nodeName;
     }
 
-    public Stage.StageMode getStageMode() {
+    public Stage.StageMode getStageMode()
+    {
         return stageMode;
     }
 
-    public void setStageMode(Stage.StageMode stageMode) {
+    public void setStageMode(Stage.StageMode stageMode)
+    {
         this.stageMode = stageMode;
     }
 
-    public Long getMessagingTimeoutInMilliseconds() {
+    public Long getMessagingTimeoutInMilliseconds()
+    {
         return messagingTimeoutInMilliseconds;
     }
 
-    public void setMessagingTimeoutInMilliseconds(Long timeout) {
+    public void setMessagingTimeoutInMilliseconds(Long timeout)
+    {
         this.messagingTimeoutInMilliseconds = timeout;
     }
 
-    public Long getTimeToLiveInSeconds() {
+    public Long getTimeToLiveInSeconds()
+    {
         return timeToLiveInSeconds;
     }
 
-    public void setTimeToLiveInSeconds(Long ttl) {
+    public void setTimeToLiveInSeconds(Long ttl)
+    {
         this.timeToLiveInSeconds = ttl;
     }
 
-    public List<String> getStickyHeaders() {
+    public List<String> getStickyHeaders()
+    {
         return stickyHeaders;
     }
 
-    public void setStickyHeaders(List<String> headers) {
+    public void setStickyHeaders(List<String> headers)
+    {
         this.stickyHeaders = headers;
     }
 
-    public Integer getConcurrentDeactivations() {
+    public Integer getConcurrentDeactivations()
+    {
         return concurrentDeactivations;
     }
 
-    public void setConcurrentDeactivations(final Integer concurrentDeactivations) {
+    public void setConcurrentDeactivations(final Integer concurrentDeactivations)
+    {
         this.concurrentDeactivations = concurrentDeactivations;
     }
 
-    public Long getDeactivationTimeoutInMilliseconds() {
+    public Long getDeactivationTimeoutInMilliseconds()
+    {
         return deactivationTimeoutInMilliseconds;
     }
 
-    public void setDeactivationTimeoutInMilliseconds(final Long deactivationTimeoutInMilliseconds) {
+    public void setDeactivationTimeoutInMilliseconds(final Long deactivationTimeoutInMilliseconds)
+    {
         this.deactivationTimeoutInMilliseconds = deactivationTimeoutInMilliseconds;
     }
 

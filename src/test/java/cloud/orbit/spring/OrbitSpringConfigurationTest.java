@@ -51,18 +51,21 @@ import static org.junit.Assert.assertTrue;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.NONE)
 @ContextConfiguration(classes = OrbitSpringConfiguration.class)
-public class OrbitSpringConfigurationTest {
+public class OrbitSpringConfigurationTest
+{
     @Autowired
     private ApplicationContext applicationContext;
 
     @Test
-    public void loadSpringLifecycleExtensions() throws Exception {
+    public void loadSpringLifecycleExtensions() throws Exception
+    {
         Map<String, ActorExtension> actorExtensionBeans = applicationContext.getBeansOfType(ActorExtension.class);
         assertTrue(actorExtensionBeans.keySet().contains("springLifecycleExtension"));
     }
 
     @Test
-    public void validateStageHasSpringLifecycleExtension() throws Exception {
+    public void validateStageHasSpringLifecycleExtension() throws Exception
+    {
         Stage stage = applicationContext.getBean(Stage.class);
         List<ActorExtension> actorExtensions = stage.getAllExtensions(ActorExtension.class);
         long count = actorExtensions.stream().filter(actorExtension -> actorExtension.getClass()
