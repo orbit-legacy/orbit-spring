@@ -49,9 +49,9 @@ public class OrbitSpringConfiguration
     private List<OrbitSpringConfigurationAddon> configAddons;
 
     @Bean
-    public ActorExtension springLifecycleExtension(AutowireCapableBeanFactory factory)
+    public ActorExtension springActorConstructionExtension(AutowireCapableBeanFactory factory)
     {
-        return new SpringLifetimeExtension(factory);
+        return new SpringActorConstructionExtension(factory);
     }
 
     @Bean
@@ -107,13 +107,12 @@ public class OrbitSpringConfiguration
             stageBuilder.deactivationTimeout(properties.getDeactivationTimeoutInMilliseconds(), TimeUnit.MILLISECONDS);
         }
 
-        Stage stage = stageBuilder.build();
-
-        // TODO: Replace this with the version in StageBuilder once it lands in Orbit 1.0.0-rc3
         if (properties.getExecutionPoolSize() != null)
         {
-            stage.setExecutionPoolSize(properties.getExecutionPoolSize());
+            stageBuilder.executionPoolSize(properties.getExecutionPoolSize());
         }
+
+        Stage stage = stageBuilder.build();
 
         if (configAddons != null)
         {

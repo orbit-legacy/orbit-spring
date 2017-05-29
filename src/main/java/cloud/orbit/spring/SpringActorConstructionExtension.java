@@ -30,15 +30,13 @@ package cloud.orbit.spring;
 
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 
-import cloud.orbit.actors.extensions.LifetimeExtension;
-import cloud.orbit.actors.runtime.AbstractActor;
-import cloud.orbit.concurrent.Task;
+import cloud.orbit.actors.extensions.ActorConstructionExtension;
 
-class SpringLifetimeExtension implements LifetimeExtension
+class SpringActorConstructionExtension implements ActorConstructionExtension
 {
     private final AutowireCapableBeanFactory beanFactory;
 
-    public SpringLifetimeExtension(AutowireCapableBeanFactory beanFactory)
+    public SpringActorConstructionExtension(AutowireCapableBeanFactory beanFactory)
     {
         this.beanFactory = beanFactory;
     }
@@ -48,13 +46,5 @@ class SpringLifetimeExtension implements LifetimeExtension
     public <T> T newInstance(Class<T> concreteClass)
     {
         return beanFactory.createBean(concreteClass);
-    }
-
-    // Provides property injection for actors
-    @Override
-    public Task<Void> preActivation(AbstractActor<?> actor)
-    {
-        beanFactory.autowireBeanProperties(actor, AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE, false);
-        return Task.done();
     }
 }

@@ -46,7 +46,7 @@ import java.util.Map;
 import static org.junit.Assert.assertTrue;
 
 /*
- * Very simple (poor) tests to validate that the SpringLifecycleExtension is being properly bound to the Stage
+ * Very simple (poor) tests to validate that the SpringActorConstructionExtension is being properly bound to the Stage
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.NONE)
@@ -57,19 +57,17 @@ public class OrbitSpringConfigurationTest
     private ApplicationContext applicationContext;
 
     @Test
-    public void loadSpringLifecycleExtensions() throws Exception
+    public void loadSpringActorConsstructionExtension() throws Exception
     {
         Map<String, ActorExtension> actorExtensionBeans = applicationContext.getBeansOfType(ActorExtension.class);
-        assertTrue(actorExtensionBeans.keySet().contains("springLifecycleExtension"));
+        assertTrue(actorExtensionBeans.keySet().contains("springActorConstructionExtension"));
     }
 
     @Test
-    public void validateStageHasSpringLifecycleExtension() throws Exception
+    public void validateStageHasSpringActorConstructionExtension() throws Exception
     {
         Stage stage = applicationContext.getBean(Stage.class);
         List<ActorExtension> actorExtensions = stage.getAllExtensions(ActorExtension.class);
-        long count = actorExtensions.stream().filter(actorExtension -> actorExtension.getClass()
-                .isAssignableFrom(SpringLifetimeExtension.class)).count();
-        assertTrue(count == 1);
+        assertTrue(actorExtensions.stream().anyMatch((p -> p instanceof SpringActorConstructionExtension)));
     }
 }
