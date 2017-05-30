@@ -34,10 +34,12 @@ import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import cloud.orbit.actors.Actor;
 import cloud.orbit.actors.runtime.AbstractActor;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +48,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItems;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
@@ -59,6 +62,17 @@ public class ActorInfoContributorTest
     @Before
     public void setUp() throws Exception
     {
+        initializeExtensionWithProperties(
+                ActorInfoDetailsContainer.GroupProperties.GroupType.INTERFACE,
+                ActorInfoDetailsContainer.GroupProperties.GroupType.IDENTITY);
+    }
+
+    private void initializeExtensionWithProperties(final ActorInfoDetailsContainer.GroupProperties.GroupType primary,
+                                                   final ActorInfoDetailsContainer.GroupProperties.GroupType secondary)
+    {
+        ActorInfoDetailsContainer.GroupProperties groupProperties = new ActorInfoDetailsContainer.GroupProperties();
+        groupProperties.setPrimary(primary);
+        groupProperties.setSecondary(secondary);
         extension = new ActorInfoContributorLifetimeExtension(reference ->
         {
             // Ideally this would be a mock, but since Mockito keeps references in memory to arguments passed
@@ -74,7 +88,7 @@ public class ActorInfoContributorTest
                 return OtherFakeActor.class;
             }
             return null;
-        });
+        }, new ActorInfoDetailsContainer(groupProperties));
     }
 
     private Map<String, Object> getInfo()
@@ -191,6 +205,83 @@ public class ActorInfoContributorTest
         NonInfoContributorFakeActor actor = new NonInfoContributorFakeActor();
         extension.preActivation(actor).join();
         assertThat(getInfo(), equalTo(Collections.EMPTY_MAP));
+    }
+
+    @Test
+    public void noGrouping_infoIsNotGrouped() throws Exception
+    {
+        initializeExtensionWithProperties(
+                ActorInfoDetailsContainer.GroupProperties.GroupType.NONE,
+                ActorInfoDetailsContainer.GroupProperties.GroupType.NONE);
+        activateMixtureOfActors();
+        Map actorInfo = (Map) getInfo().get("actors");
+        assertThat(actorInfo.keySet(), equalTo(ImmutableSet.of("a", "b")));
+        assertThat(Arrays.asList(5, 6, 7, 8), hasItems(actorInfo.values().toArray()));
+    }
+
+    @Test
+    public void groupByPrimaryIdentity_infoIsGroupedByIdentity() throws Exception
+    {
+        initializeExtensionWithProperties(
+                ActorInfoDetailsContainer.GroupProperties.GroupType.IDENTITY,
+                ActorInfoDetailsContainer.GroupProperties.GroupType.NONE);
+        activateMixtureOfActors();
+        assertThat(getInfo().get("actors"), equalTo(ImmutableMap.of(
+                "0", ImmutableMap.of(
+                        "a", 5,
+                        "b", 7),
+                "1", ImmutableMap.of(
+                        "a", 8,
+                        "b", 6))));
+    }
+
+    @Test
+    public void groupByPrimaryInterface_infoIsGroupedByInterface() throws Exception
+    {
+        initializeExtensionWithProperties(
+                ActorInfoDetailsContainer.GroupProperties.GroupType.INTERFACE,
+                ActorInfoDetailsContainer.GroupProperties.GroupType.NONE);
+        activateMixtureOfActors();
+        assertThat(getInfo().get("actors"), equalTo(ImmutableMap.of(
+                "FakeActor", ImmutableMap.of(
+                        "a", 5,
+                        "b", 6),
+                "OtherFakeActor", ImmutableMap.of(
+                        "b", 7,
+                        "a", 8))));
+    }
+
+    @Test
+    public void groupByPrimaryIdentitySecondaryInterface_infoIsGroupedByIdentityThenInterface() throws Exception
+    {
+        initializeExtensionWithProperties(
+                ActorInfoDetailsContainer.GroupProperties.GroupType.IDENTITY,
+                ActorInfoDetailsContainer.GroupProperties.GroupType.INTERFACE);
+        activateMixtureOfActors();
+        assertThat(getInfo().get("actors"), equalTo(ImmutableMap.of(
+                "0", ImmutableMap.of(
+                        "FakeActor", ImmutableMap.of(
+                                "a", 5),
+                        "OtherFakeActor", ImmutableMap.of(
+                                "b", 7)
+                        ),
+                "1", ImmutableMap.of(
+                        "FakeActor", ImmutableMap.of(
+                                "b", 6),
+                        "OtherFakeActor", ImmutableMap.of(
+                                "a", 8)))));
+    }
+
+    private void activateMixtureOfActors()
+    {
+        FakeActorImpl fakeActorA = new FakeActorImpl("0", "a", 5);
+        FakeActorImpl fakeActorB = new FakeActorImpl("1", "b", 6);
+        OtherFakeActorImpl fakeActorC = new OtherFakeActorImpl("0", "b", 7);
+        OtherFakeActorImpl fakeActorD = new OtherFakeActorImpl("1", "a", 8);
+        extension.preActivation(fakeActorA).join();
+        extension.preActivation(fakeActorB).join();
+        extension.preActivation(fakeActorC).join();
+        extension.preActivation(fakeActorD).join();
     }
 
     private interface FakeActor extends Actor

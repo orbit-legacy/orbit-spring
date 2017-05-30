@@ -28,28 +28,33 @@
 
 package cloud.orbit.spring.actuate;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
 
-import cloud.orbit.actors.Actor;
 import cloud.orbit.actors.extensions.LifetimeExtension;
 import cloud.orbit.actors.runtime.AbstractActor;
 import cloud.orbit.concurrent.Task;
 
-import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class ActorInfoContributorLifetimeExtension implements LifetimeExtension, InfoContributor
 {
+    private static final Logger log = LoggerFactory.getLogger(ActorInfoContributorLifetimeExtension.class);
+
     private final Function<AbstractActor, Class> actorTypeResolver;
+    private final ActorInfoDetailsContainer actorInfoDetailsContainer;
 
     private Set<ActorInfoContributorReference> actorInfoContributorReferences = new HashSet<>();
 
-    ActorInfoContributorLifetimeExtension(final Function<AbstractActor, Class> actorTypeResolver)
+    ActorInfoContributorLifetimeExtension(final Function<AbstractActor, Class> actorTypeResolver,
+                                          final ActorInfoDetailsContainer actorInfoDetailsContainer)
     {
         this.actorTypeResolver = actorTypeResolver;
+        this.actorInfoDetailsContainer = actorInfoDetailsContainer;
     }
 
     @Override
@@ -69,7 +74,8 @@ public class ActorInfoContributorLifetimeExtension implements LifetimeExtension,
     {
         if (actor instanceof InfoContributor)
         {
-            ActorInfoContributorReference actorInfoContributorReference = new ActorInfoContributorReference(actor);
+            ActorInfoContributorReference actorInfoContributorReference =
+                    new ActorInfoContributorReference(actorTypeResolver, actor);
             synchronized(this)
             {
                 synchronizedAction.accept(actorInfoContributorReference);
@@ -79,62 +85,31 @@ public class ActorInfoContributorLifetimeExtension implements LifetimeExtension,
     }
 
     @Override
-    public void contribute(final Info.Builder builder)
+    public synchronized void contribute(final Info.Builder builder)
     {
-        createInfoObjectAndRemoveExpiredReferences()
-                .ifPresent(actorInfoObject -> builder.withDetail("actors", actorInfoObject));
+        Map<String, Object> details = actorInfoDetailsContainer.getDetails();
+        details.clear();
+        populateActorInfoContainerWhileRemovingExpiredReferences();
+        if (!details.isEmpty())
+        {
+            builder.withDetail("actors", details);
+        }
     }
 
-    private synchronized Optional<?> createInfoObjectAndRemoveExpiredReferences()
+    private void populateActorInfoContainerWhileRemovingExpiredReferences()
     {
-        Map<String, Map<String, Object>> actorInfoObject = new HashMap<>();
         for (Iterator<ActorInfoContributorReference> it = actorInfoContributorReferences.iterator(); it.hasNext(); )
         {
-            ActorInfoContributorReference actor = it.next();
-            InfoContributor contributor = actor.reference.get();
-            if (contributor == null)
+            try
             {
+                ActorInfoContributorReference actor = it.next();
+                actorInfoDetailsContainer.mergeDetailsFrom(actor);
+            }
+            catch (ActorInfoContributorReference.ExpiredReferenceException e)
+            {
+                log.debug("Lost reference to actor", e);
                 it.remove();
             }
-            else
-            {
-                final Info.Builder builder = new Info.Builder();
-                contributor.contribute(builder);
-                actorInfoObject.putIfAbsent(actor.name, new HashMap<>());
-                actorInfoObject.get(actor.name).put(actor.identity, builder.build().getDetails());
-            }
-        }
-        return actorInfoObject.isEmpty() ? Optional.empty() : Optional.of(actorInfoObject);
-    }
-
-    private class ActorInfoContributorReference
-    {
-        private final WeakReference<InfoContributor> reference;
-        private final String name;
-        private final String identity;
-
-        private ActorInfoContributorReference(final AbstractActor<?> actor)
-        {
-            reference = new WeakReference<>((InfoContributor) actor);
-            name = actorTypeResolver.apply(actor).getSimpleName();
-            identity = ((Actor) actor).getIdentity();
-        }
-
-        @Override
-        public boolean equals(final Object o)
-        {
-            if (o == null || getClass() != o.getClass())
-            {
-                return false;
-            }
-            final ActorInfoContributorReference that = (ActorInfoContributorReference) o;
-            return name.equals(that.name) && identity.equals(that.identity);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return name.hashCode() ^ identity.hashCode();
         }
     }
 }

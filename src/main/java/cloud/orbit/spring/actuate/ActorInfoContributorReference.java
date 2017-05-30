@@ -28,36 +28,69 @@
 
 package cloud.orbit.spring.actuate;
 
-import org.springframework.boot.actuate.autoconfigure.ConditionalOnEnabledInfoContributor;
 import org.springframework.boot.actuate.info.InfoContributor;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-import cloud.orbit.actors.runtime.RemoteReference;
+import cloud.orbit.actors.Actor;
+import cloud.orbit.actors.runtime.AbstractActor;
 
-@Configuration
-@ConditionalOnClass(InfoContributor.class)
-@ConditionalOnEnabledInfoContributor("actors")
-public class ActorInfoContributorConfiguration
+import java.lang.ref.WeakReference;
+import java.util.function.Function;
+
+class ActorInfoContributorReference
 {
-    @Bean
-    @ConditionalOnMissingBean(ActorInfoDetailsContainer.GroupProperties.class)
-    @ConfigurationProperties(prefix = "management.info.actors.group")
-    public ActorInfoDetailsContainer.GroupProperties actorInfoContainerProperties()
+    private final WeakReference<InfoContributor> reference;
+    private final String name;
+    private final String identity;
+
+    ActorInfoContributorReference(final Function<AbstractActor, Class> actorTypeResolver, final AbstractActor<?> actor)
     {
-        return new ActorInfoDetailsContainer.GroupProperties();
+        reference = new WeakReference<>((InfoContributor) actor);
+        name = actorTypeResolver.apply(actor).getSimpleName();
+        identity = ((Actor) actor).getIdentity();
     }
 
-    @Bean
-    @ConditionalOnMissingBean(ActorInfoContributorLifetimeExtension.class)
-    public ActorInfoContributorLifetimeExtension actorInfoContributorLifetimeExtension(
-            final ActorInfoDetailsContainer.GroupProperties groupProperties)
+    @Override
+    public boolean equals(final Object o)
     {
-        return new ActorInfoContributorLifetimeExtension(
-                RemoteReference::getInterfaceClass,
-                new ActorInfoDetailsContainer(groupProperties));
+        if (o == null || getClass() != o.getClass())
+        {
+            return false;
+        }
+        final ActorInfoContributorReference that = (ActorInfoContributorReference) o;
+        return name.equals(that.name) && identity.equals(that.identity);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return name.hashCode() ^ identity.hashCode();
+    }
+
+    InfoContributor getInfoContributor()
+    {
+        InfoContributor infoContributor = reference.get();
+        if (infoContributor == null)
+        {
+            throw new ExpiredReferenceException(this);
+        }
+        return infoContributor;
+    }
+
+    String getName()
+    {
+        return name;
+    }
+
+    String getIdentity()
+    {
+        return identity;
+    }
+
+    static class ExpiredReferenceException extends RuntimeException
+    {
+        private ExpiredReferenceException(final ActorInfoContributorReference reference)
+        {
+            super(reference.toString());
+        }
     }
 }
