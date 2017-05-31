@@ -53,21 +53,21 @@ public class OrbitSpringConfigurationTest
     @Test(expected = IllegalArgumentException.class)
     public void buildStage_nullProperties_throws() throws Exception
     {
-        new OrbitSpringConfiguration().buildStage(null, null, null);
+        new OrbitSpringConfiguration().buildStage(null, null, null, null);
     }
 
     @Test
     public void buildStage_nullExtensionsAndNullMessagingAndNoProperties_ok() throws Exception
     {
-        new OrbitSpringConfiguration().buildStage(properties, null, null);
+        new OrbitSpringConfiguration().buildStage(properties, null, null, null);
     }
 
     @Test
     public void buildStage_withAnExtension_stageHasExtension() throws Exception
     {
         ActorExtension actorExtension = mock(ActorExtension.class);
-        Stage stage =
-                new OrbitSpringConfiguration().buildStage(properties, Collections.singletonList(actorExtension), null);
+        Stage stage = new OrbitSpringConfiguration()
+                .buildStage(properties, Collections.singletonList(actorExtension), null, null);
         assertThat(stage.getExtensions(), contains(actorExtension));
     }
 }

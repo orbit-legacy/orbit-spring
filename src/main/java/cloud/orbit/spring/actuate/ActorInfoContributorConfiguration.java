@@ -28,8 +28,10 @@
 
 package cloud.orbit.spring.actuate;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.actuate.autoconfigure.ConditionalOnEnabledInfoContributor;
 import org.springframework.boot.actuate.info.InfoContributor;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -37,10 +39,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import cloud.orbit.actors.runtime.RemoteReference;
+import cloud.orbit.spring.OrbitSpringConfiguration;
+
+import java.util.concurrent.ExecutorService;
 
 @Configuration
 @ConditionalOnClass(InfoContributor.class)
 @ConditionalOnEnabledInfoContributor("actors")
+@AutoConfigureAfter(OrbitSpringConfiguration.class)
 public class ActorInfoContributorConfiguration
 {
     @Bean
@@ -54,10 +60,12 @@ public class ActorInfoContributorConfiguration
     @Bean
     @ConditionalOnMissingBean(ActorInfoContributorLifetimeExtension.class)
     public ActorInfoContributorLifetimeExtension actorInfoContributorLifetimeExtension(
-            final ActorInfoDetailsContainer.GroupProperties groupProperties)
+            final ActorInfoDetailsContainer.GroupProperties groupProperties,
+            @Qualifier("stageExecutorService") final ExecutorService stageExecutorService)
     {
         return new ActorInfoContributorLifetimeExtension(
                 RemoteReference::getInterfaceClass,
-                new ActorInfoDetailsContainer(groupProperties));
+                new ActorInfoDetailsContainer(groupProperties),
+                stageExecutorService);
     }
 }

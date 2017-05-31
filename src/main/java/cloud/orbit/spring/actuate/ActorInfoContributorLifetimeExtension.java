@@ -33,38 +33,39 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
 
-import cloud.orbit.actors.extensions.LifetimeExtension;
 import cloud.orbit.actors.runtime.AbstractActor;
 import cloud.orbit.concurrent.Task;
 
 import java.util.*;
+import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class ActorInfoContributorLifetimeExtension implements LifetimeExtension, InfoContributor
+public class ActorInfoContributorLifetimeExtension extends AsyncLifetimeExtension implements InfoContributor
 {
     private static final Logger log = LoggerFactory.getLogger(ActorInfoContributorLifetimeExtension.class);
 
     private final Function<AbstractActor, Class> actorTypeResolver;
     private final ActorInfoDetailsContainer actorInfoDetailsContainer;
-
-    private Set<ActorInfoContributorReference> actorInfoContributorReferences = new HashSet<>();
+    private final Set<ActorInfoContributorReference> actorInfoContributorReferences = new HashSet<>();
 
     ActorInfoContributorLifetimeExtension(final Function<AbstractActor, Class> actorTypeResolver,
-                                          final ActorInfoDetailsContainer actorInfoDetailsContainer)
+                                          final ActorInfoDetailsContainer actorInfoDetailsContainer,
+                                          final Executor executor)
     {
+        super(executor);
         this.actorTypeResolver = actorTypeResolver;
         this.actorInfoDetailsContainer = actorInfoDetailsContainer;
     }
 
     @Override
-    public Task<?> preActivation(final AbstractActor<?> actor)
+    public Task<?> postActivationAsync(final AbstractActor<?> actor)
     {
         return doIfInfoContributor(actor, actorInfoContributorReferences::add);
     }
 
     @Override
-    public Task<?> preDeactivation(final AbstractActor<?> actor)
+    public Task<?> postDeactivationAsync(final AbstractActor<?> actor)
     {
         return doIfInfoContributor(actor, actorInfoContributorReferences::remove);
     }
@@ -76,7 +77,7 @@ public class ActorInfoContributorLifetimeExtension implements LifetimeExtension,
         {
             ActorInfoContributorReference actorInfoContributorReference =
                     new ActorInfoContributorReference(actorTypeResolver, actor);
-            synchronized(this)
+            synchronized (actorInfoContributorReferences)
             {
                 synchronizedAction.accept(actorInfoContributorReference);
             }
@@ -85,11 +86,10 @@ public class ActorInfoContributorLifetimeExtension implements LifetimeExtension,
     }
 
     @Override
-    public synchronized void contribute(final Info.Builder builder)
+    public void contribute(final Info.Builder builder)
     {
-        Map<String, Object> details = actorInfoDetailsContainer.getDetails();
-        details.clear();
         populateActorInfoContainerWhileRemovingExpiredReferences();
+        Map<String, Object> details = actorInfoDetailsContainer.getDetailsSnapshot();
         if (!details.isEmpty())
         {
             builder.withDetail("actors", details);
@@ -98,17 +98,20 @@ public class ActorInfoContributorLifetimeExtension implements LifetimeExtension,
 
     private void populateActorInfoContainerWhileRemovingExpiredReferences()
     {
-        for (Iterator<ActorInfoContributorReference> it = actorInfoContributorReferences.iterator(); it.hasNext(); )
+        synchronized (actorInfoContributorReferences)
         {
-            try
+            for (Iterator<ActorInfoContributorReference> it = actorInfoContributorReferences.iterator(); it.hasNext(); )
             {
-                ActorInfoContributorReference actor = it.next();
-                actorInfoDetailsContainer.mergeDetailsFrom(actor);
-            }
-            catch (ActorInfoContributorReference.ExpiredReferenceException e)
-            {
-                log.debug("Lost reference to actor", e);
-                it.remove();
+                try
+                {
+                    ActorInfoContributorReference actor = it.next();
+                    actorInfoDetailsContainer.mergeDetailsFrom(actor);
+                }
+                catch (ActorInfoContributorReference.ExpiredReferenceException e)
+                {
+                    log.debug("Lost reference to actor", e);
+                    it.remove();
+                }
             }
         }
     }

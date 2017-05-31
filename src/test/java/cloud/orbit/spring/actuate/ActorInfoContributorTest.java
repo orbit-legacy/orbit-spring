@@ -28,10 +28,14 @@
 
 package cloud.orbit.spring.actuate;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.info.Info;
 import org.springframework.boot.actuate.info.InfoContributor;
+import org.springframework.core.task.SyncTaskExecutor;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -57,6 +61,7 @@ import static org.mockito.Mockito.verify;
 
 public class ActorInfoContributorTest
 {
+    private static Logger log = LoggerFactory.getLogger(ActorInfoContributorTest.class);
     private ActorInfoContributorLifetimeExtension extension;
 
     @Before
@@ -88,7 +93,14 @@ public class ActorInfoContributorTest
                 return OtherFakeActor.class;
             }
             return null;
-        }, new ActorInfoDetailsContainer(groupProperties));
+        }, new ActorInfoDetailsContainer(groupProperties), new SyncTaskExecutor());
+        extension.start().join();
+    }
+
+    @After
+    public void tearDown() throws Exception
+    {
+        extension.stop().join();
     }
 
     private Map<String, Object> getInfo()
@@ -108,7 +120,7 @@ public class ActorInfoContributorTest
     public void actorIsActive_getActorInfo_callsIntoActor() throws Exception
     {
         FakeActorImpl actor = spy(new FakeActorImpl("a", "b", "c"));
-        extension.preActivation(actor).join();
+        extension.postActivation(actor).join();
         getInfo();
         verify(actor).contribute(any());
     }
@@ -118,8 +130,8 @@ public class ActorInfoContributorTest
     {
         FakeActorImpl fakeActorA = new FakeActorImpl("123", "baz", 8);
         FakeActorImpl fakeActorB = new FakeActorImpl("456", "biz", "goo");
-        extension.preActivation(fakeActorA).join();
-        extension.preActivation(fakeActorB).join();
+        extension.postActivation(fakeActorA).join();
+        extension.postActivation(fakeActorB).join();
         assertThat(getInfo().get("actors"), equalTo(ImmutableMap.of(
                 "FakeActor", ImmutableMap.of(
                         "123", ImmutableMap.of(
@@ -133,8 +145,8 @@ public class ActorInfoContributorTest
     {
         FakeActorImpl fakeActorA = new FakeActorImpl("123", "something", 100);
         OtherFakeActorImpl fakeActorB = new OtherFakeActorImpl("456", "number", 999);
-        extension.preActivation(fakeActorA).join();
-        extension.preActivation(fakeActorB).join();
+        extension.postActivation(fakeActorA).join();
+        extension.postActivation(fakeActorB).join();
         assertThat(getInfo().get("actors"), equalTo(ImmutableMap.of(
                 "FakeActor", ImmutableMap.of(
                         "123", ImmutableMap.of(
@@ -147,7 +159,7 @@ public class ActorInfoContributorTest
     @Test
     public void actorGoesOffline_getsRemovedFromInfo() throws Exception
     {
-        extension.preActivation(new FakeActorImpl("a", "b", "c")).join();
+        extension.postActivation(new FakeActorImpl("a", "b", "c")).join();
         System.gc();
         assertThat(getInfo(), equalTo(Collections.EMPTY_MAP));
     }
@@ -168,7 +180,7 @@ public class ActorInfoContributorTest
                 {
                     if (r.nextBoolean())
                     {
-                        extension.preActivation(new FakeActorImpl(String.valueOf(i),
+                        extension.postActivation(new FakeActorImpl(String.valueOf(i),
                                 randomStrings[r.nextInt(randomStrings.length)],
                                 randomStrings[r.nextInt(randomStrings.length)])).join();
                     }
@@ -180,6 +192,7 @@ public class ActorInfoContributorTest
             }
             catch (Exception e)
             {
+                log.error("Exception in thread", e);
                 exceptionFromThread[0] = e;
             }
         };
@@ -203,7 +216,7 @@ public class ActorInfoContributorTest
     public void actorDoesNotImplementInfoContributor_actorDoesNotGetProcessed() throws Exception
     {
         NonInfoContributorFakeActor actor = new NonInfoContributorFakeActor();
-        extension.preActivation(actor).join();
+        extension.postActivation(actor).join();
         assertThat(getInfo(), equalTo(Collections.EMPTY_MAP));
     }
 
@@ -272,16 +285,16 @@ public class ActorInfoContributorTest
                                 "a", 8)))));
     }
 
-    private void activateMixtureOfActors()
+    private void activateMixtureOfActors() throws InterruptedException
     {
         FakeActorImpl fakeActorA = new FakeActorImpl("0", "a", 5);
         FakeActorImpl fakeActorB = new FakeActorImpl("1", "b", 6);
         OtherFakeActorImpl fakeActorC = new OtherFakeActorImpl("0", "b", 7);
         OtherFakeActorImpl fakeActorD = new OtherFakeActorImpl("1", "a", 8);
-        extension.preActivation(fakeActorA).join();
-        extension.preActivation(fakeActorB).join();
-        extension.preActivation(fakeActorC).join();
-        extension.preActivation(fakeActorD).join();
+        extension.postActivation(fakeActorA).join();
+        extension.postActivation(fakeActorB).join();
+        extension.postActivation(fakeActorC).join();
+        extension.postActivation(fakeActorD).join();
     }
 
     private interface FakeActor extends Actor

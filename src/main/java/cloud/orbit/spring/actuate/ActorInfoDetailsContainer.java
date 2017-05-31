@@ -30,11 +30,7 @@ package cloud.orbit.spring.actuate;
 
 import org.springframework.boot.actuate.info.Info;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -63,7 +59,7 @@ class ActorInfoDetailsContainer
         return Optional.empty();
     }
 
-    void mergeDetailsFrom(ActorInfoContributorReference actorInfoContributorReference)
+    synchronized void mergeDetailsFrom(ActorInfoContributorReference actorInfoContributorReference)
     {
         Info.Builder builder = new Info.Builder();
         actorInfoContributorReference.getInfoContributor().contribute(builder);
@@ -78,9 +74,11 @@ class ActorInfoDetailsContainer
         whereToPutDetails.putAll(builder.build().getDetails());
     }
 
-    Map<String, Object> getDetails()
+    synchronized Map<String, Object> getDetailsSnapshot()
     {
-        return details;
+        HashMap<String, Object> detailsCopy = new HashMap<>(details);
+        details.clear();
+        return detailsCopy;
     }
 
     @SuppressWarnings({ "WeakerAccess", "unused" }) // public setters needed for Spring to inject properties

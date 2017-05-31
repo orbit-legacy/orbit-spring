@@ -55,9 +55,17 @@ import cloud.orbit.spring.OrbitBeanDefinitionRegistrar;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
@@ -74,6 +82,12 @@ public class ActorInfoContributorIntegrationTest
     @Autowired
     private Stage stage;
 
+    @Autowired
+    private Executor executor;
+
+    @Autowired
+    private ActorInfoContributorLifetimeExtension actorInfoContributorLifetimeExtension;
+
     private Map<String, Object> result;
 
     @After
@@ -81,6 +95,12 @@ public class ActorInfoContributorIntegrationTest
     {
         // The @DirtiesContext annotation doesn't take care of the stage, so we do it explicitly
         stage.stop().join();
+    }
+
+    @Test
+    public void usesDefaultOrbitThreadPool() throws Exception
+    {
+        assertThat(executor, instanceOf(ForkJoinPool.class));
     }
 
     @Test
@@ -187,10 +207,63 @@ public class ActorInfoContributorIntegrationTest
                 ))));
     }
 
-    private void readInfoEndpoint()
+    @Test
+    public void testThreadSafe() throws Exception
     {
+        Exception[] exceptionFromThread = new Exception[1];
+        Runnable runnable = () ->
+        {
+            List<Integer> indices = IntStream.range(0, 30).boxed().collect(Collectors.toList());
+            Collections.shuffle(indices);
+            Random r = new Random();
+            try
+            {
+                for (int i : indices)
+                {
+                    if (r.nextBoolean())
+                    {
+                        Actor.getReference(ActorWithInjection.class, String.valueOf(i)).touch().join();
+                    }
+                    else
+                    {
+                        actorInfoContributorLifetimeExtension.contribute(new Info.Builder());
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                exceptionFromThread[0] = e;
+            }
+        };
+        Thread[] threads = new Thread[10];
+        for (int i = 0; i < threads.length; i++)
+        {
+            threads[i] = new Thread(runnable);
+        }
+        for (final Thread thread : threads)
+        {
+            thread.start();
+        }
+        for (final Thread thread : threads)
+        {
+            thread.join();
+        }
+        assertNull(exceptionFromThread[0]);
+    }
+
+    private void readInfoEndpoint() throws InterruptedException
+    {
+        waitForBackgroundProcessToComplete();
         //noinspection unchecked
         result = new RestTemplate().getForObject(String.format("http://localhost:%d/info", port), LinkedHashMap.class);
+    }
+
+    private void waitForBackgroundProcessToComplete() throws InterruptedException
+    {
+        while (((ForkJoinPool) executor).getActiveThreadCount() > 0)
+        {
+            Thread.sleep(1);
+        }
     }
 
     @TestConfiguration
@@ -234,6 +307,7 @@ public class ActorInfoContributorIntegrationTest
 
     public interface ActorWithInjection extends ActorWithStat, Actor
     {
+        Task<Void> touch();
     }
 
     public static class ActorWithInjectionImpl extends ActorWithStatImpl implements ActorWithInjection
@@ -255,6 +329,12 @@ public class ActorInfoContributorIntegrationTest
             builder.withDetail("constructorInjectedValue", constructorInjectedValue)
                     .withDetail("fieldInjectedValue", fieldInjectedValue);
             super.contribute(builder);
+        }
+
+        @Override
+        public Task<Void> touch()
+        {
+            return Task.done();
         }
     }
 
