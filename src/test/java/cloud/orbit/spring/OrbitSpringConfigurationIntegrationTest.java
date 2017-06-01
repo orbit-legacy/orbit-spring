@@ -28,46 +28,46 @@
 
 package cloud.orbit.spring;
 
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.ApplicationContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringRunner;
 
 import cloud.orbit.actors.Stage;
 import cloud.orbit.actors.extensions.ActorExtension;
 
-import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
-import static org.hamcrest.collection.IsIterableContainingInOrder.contains;
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.mock;
+import static org.junit.Assert.assertTrue;
 
-public class OrbitSpringConfigurationTest
+/*
+ * Very simple (poor) tests to validate that the SpringActorConstructionExtension is being properly bound to the Stage
+ */
+@RunWith(SpringRunner.class)
+@SpringBootTest(webEnvironment = WebEnvironment.NONE)
+@ContextConfiguration(classes = OrbitSpringConfiguration.class)
+public class OrbitSpringConfigurationIntegrationTest
 {
-    private OrbitActorsProperties properties;
+    @Autowired
+    private ApplicationContext applicationContext;
 
-    @Before
-    public void setUp() throws Exception
+    @Test
+    public void loadSpringActorConstructionExtension() throws Exception
     {
-        properties = new OrbitActorsProperties();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void buildStage_nullProperties_throws() throws Exception
-    {
-        new OrbitSpringConfiguration().buildStage(null, null, null);
+        Map<String, ActorExtension> actorExtensionBeans = applicationContext.getBeansOfType(ActorExtension.class);
+        assertTrue(actorExtensionBeans.keySet().contains("springActorConstructionExtension"));
     }
 
     @Test
-    public void buildStage_nullExtensionsAndNullMessagingAndNoProperties_ok() throws Exception
+    public void validateStageHasSpringActorConstructionExtension() throws Exception
     {
-        new OrbitSpringConfiguration().buildStage(properties, null, null);
-    }
-
-    @Test
-    public void buildStage_withAnExtension_stageHasExtension() throws Exception
-    {
-        ActorExtension actorExtension = mock(ActorExtension.class);
-        Stage stage =
-                new OrbitSpringConfiguration().buildStage(properties, Collections.singletonList(actorExtension), null);
-        assertThat(stage.getExtensions(), contains(actorExtension));
+        Stage stage = applicationContext.getBean(Stage.class);
+        List<ActorExtension> actorExtensions = stage.getAllExtensions(ActorExtension.class);
+        assertTrue(actorExtensions.stream().anyMatch((p -> p instanceof SpringActorConstructionExtension)));
     }
 }
