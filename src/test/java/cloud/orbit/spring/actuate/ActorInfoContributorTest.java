@@ -68,14 +68,16 @@ public class ActorInfoContributorTest
     public void setUp() throws Exception
     {
         initializeExtensionWithProperties(
-                ActorInfoDetailsContainer.GroupProperties.GroupType.INTERFACE,
-                ActorInfoDetailsContainer.GroupProperties.GroupType.IDENTITY);
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.INTERFACE,
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.IDENTITY);
     }
 
-    private void initializeExtensionWithProperties(final ActorInfoDetailsContainer.GroupProperties.GroupType primary,
-                                                   final ActorInfoDetailsContainer.GroupProperties.GroupType secondary)
+    private void initializeExtensionWithProperties(
+            final ActorInfoContributorConfiguration.GroupProperties.GroupType primary,
+            final ActorInfoContributorConfiguration.GroupProperties.GroupType secondary)
     {
-        ActorInfoDetailsContainer.GroupProperties groupProperties = new ActorInfoDetailsContainer.GroupProperties();
+        ActorInfoContributorConfiguration.GroupProperties groupProperties =
+                new ActorInfoContributorConfiguration.GroupProperties();
         groupProperties.setPrimary(primary);
         groupProperties.setSecondary(secondary);
         extension = new ActorInfoContributorLifetimeExtension(reference ->
@@ -224,8 +226,8 @@ public class ActorInfoContributorTest
     public void noGrouping_infoIsNotGrouped() throws Exception
     {
         initializeExtensionWithProperties(
-                ActorInfoDetailsContainer.GroupProperties.GroupType.NONE,
-                ActorInfoDetailsContainer.GroupProperties.GroupType.NONE);
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.NONE,
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.NONE);
         activateMixtureOfActors();
         Map actorInfo = (Map) getInfo().get("actors");
         assertThat(actorInfo.keySet(), equalTo(ImmutableSet.of("a", "b")));
@@ -236,8 +238,8 @@ public class ActorInfoContributorTest
     public void groupByPrimaryIdentity_infoIsGroupedByIdentity() throws Exception
     {
         initializeExtensionWithProperties(
-                ActorInfoDetailsContainer.GroupProperties.GroupType.IDENTITY,
-                ActorInfoDetailsContainer.GroupProperties.GroupType.NONE);
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.IDENTITY,
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.NONE);
         activateMixtureOfActors();
         assertThat(getInfo().get("actors"), equalTo(ImmutableMap.of(
                 "0", ImmutableMap.of(
@@ -252,8 +254,8 @@ public class ActorInfoContributorTest
     public void groupByPrimaryInterface_infoIsGroupedByInterface() throws Exception
     {
         initializeExtensionWithProperties(
-                ActorInfoDetailsContainer.GroupProperties.GroupType.INTERFACE,
-                ActorInfoDetailsContainer.GroupProperties.GroupType.NONE);
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.INTERFACE,
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.NONE);
         activateMixtureOfActors();
         assertThat(getInfo().get("actors"), equalTo(ImmutableMap.of(
                 "FakeActor", ImmutableMap.of(
@@ -268,8 +270,8 @@ public class ActorInfoContributorTest
     public void groupByPrimaryIdentitySecondaryInterface_infoIsGroupedByIdentityThenInterface() throws Exception
     {
         initializeExtensionWithProperties(
-                ActorInfoDetailsContainer.GroupProperties.GroupType.IDENTITY,
-                ActorInfoDetailsContainer.GroupProperties.GroupType.INTERFACE);
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.IDENTITY,
+                ActorInfoContributorConfiguration.GroupProperties.GroupType.INTERFACE);
         activateMixtureOfActors();
         assertThat(getInfo().get("actors"), equalTo(ImmutableMap.of(
                 "0", ImmutableMap.of(

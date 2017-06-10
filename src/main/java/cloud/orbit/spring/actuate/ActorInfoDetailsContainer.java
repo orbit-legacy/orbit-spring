@@ -39,20 +39,20 @@ class ActorInfoDetailsContainer
     private final List<Function<ActorInfoContributorReference, String>> detailLevelHandlers = new ArrayList<>();
     private final Map<String, Object> details = new HashMap<>();
 
-    ActorInfoDetailsContainer(GroupProperties groupProperties)
+    ActorInfoDetailsContainer(ActorInfoContributorConfiguration.GroupProperties groupProperties)
     {
-        Stream.of(groupProperties.primary, groupProperties.secondary)
+        Stream.of(groupProperties.getPrimary(), groupProperties.getSecondary())
                 .map(this::deriveHandlerFromGroupType)
                 .forEach(handler -> handler.ifPresent(detailLevelHandlers::add));
     }
 
     private Optional<Function<ActorInfoContributorReference, String>> deriveHandlerFromGroupType(
-            final GroupProperties.GroupType groupType) {
-        if (groupType == GroupProperties.GroupType.IDENTITY)
+            final ActorInfoContributorConfiguration.GroupProperties.GroupType groupType) {
+        if (groupType == ActorInfoContributorConfiguration.GroupProperties.GroupType.IDENTITY)
         {
             return Optional.of(ActorInfoContributorReference::getIdentity);
         }
-        if (groupType == GroupProperties.GroupType.INTERFACE)
+        if (groupType == ActorInfoContributorConfiguration.GroupProperties.GroupType.INTERFACE)
         {
             return Optional.of(ActorInfoContributorReference::getName);
         }
@@ -79,36 +79,5 @@ class ActorInfoDetailsContainer
         HashMap<String, Object> detailsCopy = new HashMap<>(details);
         details.clear();
         return detailsCopy;
-    }
-
-    @SuppressWarnings({ "WeakerAccess", "unused" }) // public setters needed for Spring to inject properties
-    static class GroupProperties
-    {
-        private GroupType primary = GroupType.INTERFACE;
-        private GroupType secondary = GroupType.IDENTITY;
-
-        public void setPrimary(final GroupType primary)
-        {
-            this.primary = primary;
-        }
-
-        public void setSecondary(final GroupType secondary)
-        {
-            this.secondary = secondary;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "GroupProperties{" +
-                    "primary=" + primary +
-                    ", secondary=" + secondary +
-                    '}';
-        }
-
-        enum GroupType
-        {
-            NONE, INTERFACE, IDENTITY
-        }
     }
 }

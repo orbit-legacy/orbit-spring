@@ -35,6 +35,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -47,25 +48,59 @@ import java.util.concurrent.ExecutorService;
 @ConditionalOnClass(InfoContributor.class)
 @ConditionalOnEnabledInfoContributor("actors")
 @AutoConfigureAfter(OrbitSpringConfiguration.class)
+@EnableConfigurationProperties(ActorInfoContributorConfiguration.GroupProperties.class)
 public class ActorInfoContributorConfiguration
 {
     @Bean
-    @ConditionalOnMissingBean(ActorInfoDetailsContainer.GroupProperties.class)
-    @ConfigurationProperties(prefix = "management.info.actors.group")
-    public ActorInfoDetailsContainer.GroupProperties actorInfoContainerProperties()
-    {
-        return new ActorInfoDetailsContainer.GroupProperties();
-    }
-
-    @Bean
     @ConditionalOnMissingBean(ActorInfoContributorLifetimeExtension.class)
     public ActorInfoContributorLifetimeExtension actorInfoContributorLifetimeExtension(
-            final ActorInfoDetailsContainer.GroupProperties groupProperties,
-            @Qualifier("stageExecutorService") final ExecutorService stageExecutorService)
+            @Qualifier("stageExecutorService") final ExecutorService stageExecutorService,
+            final GroupProperties groupProperties)
     {
         return new ActorInfoContributorLifetimeExtension(
                 RemoteReference::getInterfaceClass,
                 new ActorInfoDetailsContainer(groupProperties),
                 stageExecutorService);
+    }
+
+    @ConfigurationProperties(prefix = "management.info.actors.group")
+    static class GroupProperties
+    {
+        private GroupType primary = GroupType.INTERFACE;
+        private GroupType secondary = GroupType.IDENTITY;
+
+        public GroupType getPrimary()
+        {
+            return primary;
+        }
+
+        public GroupType getSecondary()
+        {
+            return secondary;
+        }
+
+        public void setPrimary(final GroupType primary)
+        {
+            this.primary = primary;
+        }
+
+        public void setSecondary(final GroupType secondary)
+        {
+            this.secondary = secondary;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "GroupProperties{" +
+                    "primary=" + primary +
+                    ", secondary=" + secondary +
+                    '}';
+        }
+
+        enum GroupType
+        {
+            NONE, INTERFACE, IDENTITY
+        }
     }
 }
