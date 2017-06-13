@@ -36,6 +36,61 @@ is running and the local node is alive. The health details are listed under the 
 }
 ```
 
+### Info Contributor
+
+The
+[ActorInfoContributorLifetimeExtension](https://github.com/orbit/orbit-spring/blob/master/src/main/java/cloud/orbit/spring/actuate/ActorInfoContributorLifetimeExtension.java)
+is an
+[InfoContributor](https://github.com/spring-projects/spring-boot/blob/v1.5.4.RELEASE/spring-boot-actuator/src/main/java/org/springframework/boot/actuate/info/InfoContributor.java)
+which aggregates info from
+[Actor](https://github.com/orbit/orbit/blob/master/actors/core/src/main/java/cloud/orbit/actors/Actor.java)
+implementation classes that implement the InfoContributor interface. The actors' info is listed under the key "actors"
+in the
+[info endpoint](https://docs.spring.io/spring-boot/docs/current/reference/html/production-ready-endpoints.html#production-ready-application-info).
+
+Suppose we have an actor defined as follows:
+
+```java
+public class MyActorImpl extends AbstractActor implements MyActor, InfoContributor {
+    @Override
+    public void contribute(final Info.Builder builder) {
+        builder.withDetail("status", state().getStatus());
+    }
+    ...
+}
+```
+
+If we activate two instances with identities "a" and "b", we might see this response from the `info` endpoint:
+
+```json
+{
+    "actors": {
+        "MyActor": {
+            "a": {
+                "status": {
+                    "foo": false,
+                    "bar": 0
+                }
+            },
+            "b": {
+                "status": {
+                    "foo": true,
+                    "bar": 42
+                }
+            }
+        }
+    }
+}
+```
+
+By default, actor info is grouped primarily by the actor interface, and secondarily by the actor identity. This is
+customizable by setting the properties:
+
+```yaml
+management.info.actors.group.primary: NONE | INTERFACE | IDENTITY
+management.info.actors.group.secondary: NONE | INTERFACE | IDENTITY
+```
+
 Developer & License
 ======
 This project was developed by [Electronic Arts](http://www.ea.com) and is licensed under the [BSD 3-Clause License](LICENSE).
