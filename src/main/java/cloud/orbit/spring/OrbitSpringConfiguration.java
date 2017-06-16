@@ -29,16 +29,24 @@
 package cloud.orbit.spring;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.Assert;
 
 import cloud.orbit.actors.Stage;
-import cloud.orbit.actors.extensions.ActorExtension;
-import cloud.orbit.actors.runtime.Messaging;
+import cloud.orbit.actors.cloner.ExecutionObjectCloner;
+import cloud.orbit.actors.cluster.ClusterPeer;
+import cloud.orbit.actors.extensions.*;
+import cloud.orbit.actors.runtime.*;
 
+import java.time.Clock;
 import java.util.List;
+import java.util.Timer;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -48,31 +56,108 @@ public class OrbitSpringConfiguration
     @Autowired(required = false)
     private List<OrbitSpringConfigurationAddon> configAddons;
 
+    @Autowired(required = false)
+    @Qualifier("stageClock")
+    private Clock stageClock;
+
+    @Autowired(required = false)
+    @Qualifier("stageExecutorService")
+    private ExecutorService stageExecutorService;
+
+    @Autowired(required = false)
+    private Execution execution;
+
+    @Autowired(required = false)
+    private LocalObjectsCleaner localObjectsCleaner;
+
+    @Autowired(required = false)
+    private ClusterPeer clusterPeer;
+
+    @Autowired(required = false)
+    @Qualifier("executionObjectCloner")
+    private ExecutionObjectCloner executionObjectCloner;
+
+    @Autowired(required = false)
+    private MessageSerializer messageSerializer;
+
+    @Autowired(required = false)
+    @Qualifier("messageLoopbackObjectCloner")
+    private ExecutionObjectCloner messageLoopbackObjectCloner;
+
+    @Autowired(required = false)
+    private InvocationHandler invocationHandler;
+
+    @Autowired(required = false)
+    @Qualifier("stageTimer")
+    private Timer stageTimer;
+
     @Bean
-    public ActorExtension springActorConstructionExtension(AutowireCapableBeanFactory factory)
+    @ConditionalOnMissingBean(ActorConstructionExtension.class)
+    public ActorConstructionExtension springActorConstructionExtension(AutowireCapableBeanFactory factory)
     {
         return new SpringActorConstructionExtension(factory);
     }
 
     @Bean
-    public Stage stage(OrbitActorsProperties properties, List<ActorExtension> actorExtensions)
+    @ConditionalOnMissingBean(Messaging.class)
+    public Messaging messaging(OrbitActorsProperties properties)
     {
+        Messaging messaging = new Messaging();
+        if (properties.getMessagingTimeoutInMilliseconds() != null)
+        {
+            messaging.setResponseTimeoutMillis(properties.getMessagingTimeoutInMilliseconds());
+        }
+        return messaging;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(Stage.class)
+    public Stage stage(OrbitActorsProperties properties,
+                       List<ActorExtension> actorExtensions,
+                       Messaging messaging)
+    {
+        Stage stage = buildStage(properties, actorExtensions, messaging);
+
+        if (configAddons != null)
+        {
+            configAddons.forEach(addon -> addon.configure(stage));
+        }
+
+        stage.start().join();
+        stage.bind();
+
+        return stage;
+    }
+
+    Stage buildStage(final OrbitActorsProperties properties,
+                            final List<ActorExtension> actorExtensions,
+                            final Messaging messaging)
+    {
+        Assert.notNull(properties);
+
         Stage.Builder stageBuilder = new Stage.Builder()
-                .extensions(actorExtensions.toArray(new ActorExtension[actorExtensions.size()]));
+                .clock(stageClock)
+                .executionPool(stageExecutorService)
+                .execution(execution)
+                .localObjectsCleaner(localObjectsCleaner)
+                .clusterPeer(clusterPeer)
+                .objectCloner(executionObjectCloner)
+                .messageSerializer(messageSerializer)
+                .messageLoopbackObjectCloner(messageLoopbackObjectCloner)
+                .messaging(messaging)
+                .invocationHandler(invocationHandler)
+                .timer(stageTimer)
+                .clusterName(properties.getClusterName())
+                .nodeName(properties.getNodeName());
+
+        if (actorExtensions != null)
+        {
+            stageBuilder.extensions(actorExtensions.toArray(new ActorExtension[actorExtensions.size()]));
+        }
 
         if (properties.getBasePackages() != null)
         {
             stageBuilder.basePackages(properties.getBasePackages());
-        }
-
-        if (properties.getClusterName() != null)
-        {
-            stageBuilder.clusterName(properties.getClusterName());
-        }
-
-        if (properties.getNodeName() != null)
-        {
-            stageBuilder.nodeName(properties.getNodeName());
         }
 
         if (properties.getStageMode() != null)
@@ -83,13 +168,6 @@ public class OrbitSpringConfiguration
         if (properties.getTimeToLiveInSeconds() != null)
         {
             stageBuilder.actorTTL(properties.getTimeToLiveInSeconds(), TimeUnit.SECONDS);
-        }
-
-        if (properties.getMessagingTimeoutInMilliseconds() != null)
-        {
-            Messaging orbitMessaging = new Messaging();
-            orbitMessaging.setResponseTimeoutMillis(properties.getMessagingTimeoutInMilliseconds());
-            stageBuilder.messaging(orbitMessaging);
         }
 
         if (properties.getStickyHeaders() != null)
@@ -112,16 +190,6 @@ public class OrbitSpringConfiguration
             stageBuilder.executionPoolSize(properties.getExecutionPoolSize());
         }
 
-        Stage stage = stageBuilder.build();
-
-        if (configAddons != null)
-        {
-            configAddons.forEach(addon -> addon.configure(stage));
-        }
-
-        stage.start().join();
-        stage.bind();
-
-        return stage;
+        return stageBuilder.build();
     }
 }
