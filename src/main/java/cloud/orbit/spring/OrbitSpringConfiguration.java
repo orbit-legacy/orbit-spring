@@ -190,6 +190,16 @@ public class OrbitSpringConfiguration
             stageBuilder.executionPoolSize(properties.getExecutionPoolSize());
         }
 
+        if(properties.getLocalAddressCacheTTLInMilliseconds() != null)
+        {
+            stageBuilder.localAddressCacheTTL(properties.getLocalAddressCacheTTLInMilliseconds(), TimeUnit.MILLISECONDS);
+        }
+
+        if(properties.getLocalAddressCacheMaximumSize() != null)
+        {
+            stageBuilder.localAddressCacheMaximumSize(properties.getLocalAddressCacheMaximumSize());
+        }
+
         return stageBuilder.build();
     }
 }

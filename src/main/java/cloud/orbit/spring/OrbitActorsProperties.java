@@ -47,6 +47,9 @@ public class OrbitActorsProperties
     private Integer concurrentDeactivations;
     private Long deactivationTimeoutInMilliseconds;
     private Integer executionPoolSize;
+    private Long localAddressCacheTTLInMilliseconds;
+    private Integer localAddressCacheMaximumSize;
+
 
     public List<String> getBasePackages()
     {
@@ -146,5 +149,25 @@ public class OrbitActorsProperties
     public void setExecutionPoolSize(Integer executionPoolSize)
     {
         this.executionPoolSize = executionPoolSize;
+    }
+
+    public Long getLocalAddressCacheTTLInMilliseconds()
+    {
+        return localAddressCacheTTLInMilliseconds;
+    }
+
+    public void setLocalAddressCacheTTLInMilliseconds(Long localAddressCacheTTLInMilliseconds)
+    {
+        this.localAddressCacheTTLInMilliseconds = localAddressCacheTTLInMilliseconds;
+    }
+
+    public Integer getLocalAddressCacheMaximumSize()
+    {
+        return localAddressCacheMaximumSize;
+    }
+
+    public void setLocalAddressCacheMaximumSize(Integer localAddressCacheMaximumSize)
+    {
+        this.localAddressCacheMaximumSize = localAddressCacheMaximumSize;
     }
 }
