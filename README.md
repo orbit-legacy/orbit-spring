@@ -8,6 +8,48 @@ Orbit Spring Integration
 
 Integration for using the Spring Framework to manage an Orbit Cluster.
 
+## Orbit Dependency Injection Improvements
+
+With Orbit Spring, commonly accessed static methods in traditional Orbit are wrapped in service beans.
+This makes classes easier to test.
+
+__Traditional Orbit:__
+
+```java
+public class GuestbookHandler
+{
+    public Task addEntry(String bookId, EntryDto entry)
+    {
+        Guestbook guestbook = Actor.getReference(Guestbook.class, bookId);
+        return guestbook.addEntry(entry);
+    }
+}
+```
+
+__With Orbit Spring:__
+
+```java
+public class GuestbookHandler
+{
+    @Autowired
+    private ActorReferenceService actorReferenceService;
+    
+    public Task addEntry(String bookId, EntryDto entry)
+    {
+        Guestbook guestbook = actorReferenceService.getReference(Guestbook.class, bookId);
+        return guestbook.addEntry(entry);
+    }
+}
+```
+
+Here is a full list of service mappings for improved dependency injection:
+
+Traditional Orbit | Orbit Spring
+--- | ---
+Actor | ActorReferenceService
+RemoteReference | RemoteReferenceService
+AsyncStream | AsyncStreamService
+
 ## Actuator Support
 
 Orbit Spring provides autoconfigured contributors to the 
