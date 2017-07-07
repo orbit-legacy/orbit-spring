@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "management.info.actors.enabled",
+      "description": "Enable ActorInfoContributorLifetimeExtension.",
+      "type": "java.lang.Boolean",
+      "defaultValue": true
+    },
+    {
+      "name": "management.info.actors.group.primary",
+      "description": "First-tier grouping strategy.",
+      "type": "cloud.orbit.spring.actuate.ActorInfoDetailsContainer$GroupProperties$GroupType",
+      "defaultValue": "interface"
+    },
+    {
+      "name": "management.info.actors.group.secondary",
+      "description": "Second-tier grouping strategy.",
+      "type": "cloud.orbit.spring.actuate.ActorInfoDetailsContainer$GroupProperties$GroupType",
+      "defaultValue": "identity"
+    }
+  ]
+}

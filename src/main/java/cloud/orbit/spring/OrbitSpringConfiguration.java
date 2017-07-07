@@ -40,8 +40,11 @@ import org.springframework.util.Assert;
 import cloud.orbit.actors.Stage;
 import cloud.orbit.actors.cloner.ExecutionObjectCloner;
 import cloud.orbit.actors.cluster.ClusterPeer;
-import cloud.orbit.actors.extensions.*;
+import cloud.orbit.actors.extensions.ActorConstructionExtension;
+import cloud.orbit.actors.extensions.ActorExtension;
+import cloud.orbit.actors.extensions.MessageSerializer;
 import cloud.orbit.actors.runtime.*;
+import cloud.orbit.concurrent.ExecutorUtils;
 
 import java.time.Clock;
 import java.util.List;
@@ -59,10 +62,6 @@ public class OrbitSpringConfiguration
     @Autowired(required = false)
     @Qualifier("stageClock")
     private Clock stageClock;
-
-    @Autowired(required = false)
-    @Qualifier("stageExecutorService")
-    private ExecutorService stageExecutorService;
 
     @Autowired(required = false)
     private Execution execution;
@@ -111,12 +110,22 @@ public class OrbitSpringConfiguration
     }
 
     @Bean
+    @ConditionalOnMissingBean(name = "stageExecutorService")
+    public ExecutorService stageExecutorService(OrbitActorsProperties properties)
+    {
+        // same as default execution pool from Orbit's Stage class
+        int poolSize = properties.getExecutionPoolSize() != null ? properties.getExecutionPoolSize() : 128;
+        return ExecutorUtils.newScalingThreadPool(poolSize);
+    }
+
+    @Bean
     @ConditionalOnMissingBean(Stage.class)
     public Stage stage(OrbitActorsProperties properties,
                        List<ActorExtension> actorExtensions,
-                       Messaging messaging)
+                       Messaging messaging,
+                       @Qualifier("stageExecutorService") ExecutorService stageExecutorService)
     {
-        Stage stage = buildStage(properties, actorExtensions, messaging);
+        Stage stage = buildStage(properties, actorExtensions, messaging, stageExecutorService);
 
         if (configAddons != null)
         {
@@ -130,8 +139,9 @@ public class OrbitSpringConfiguration
     }
 
     Stage buildStage(final OrbitActorsProperties properties,
-                            final List<ActorExtension> actorExtensions,
-                            final Messaging messaging)
+                     final List<ActorExtension> actorExtensions,
+                     final Messaging messaging,
+                     final ExecutorService stageExecutorService)
     {
         Assert.notNull(properties);
 
