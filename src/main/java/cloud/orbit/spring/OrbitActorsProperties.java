@@ -49,6 +49,7 @@ public class OrbitActorsProperties
     private Integer executionPoolSize;
     private Long localAddressCacheTTLInMilliseconds;
     private Integer localAddressCacheMaximumSize;
+    private Boolean broadcastActorDeactivations;
 
 
     public List<String> getBasePackages()
@@ -169,5 +170,15 @@ public class OrbitActorsProperties
     public void setLocalAddressCacheMaximumSize(Integer localAddressCacheMaximumSize)
     {
         this.localAddressCacheMaximumSize = localAddressCacheMaximumSize;
+    }
+
+    public Boolean getBroadcastActorDeactivations()
+    {
+        return broadcastActorDeactivations;
+    }
+
+    public void setBroadcastActorDeactivations(Boolean broadcastActorDeactivations)
+    {
+        this.broadcastActorDeactivations = broadcastActorDeactivations;
     }
 }

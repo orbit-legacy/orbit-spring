@@ -210,6 +210,11 @@ public class OrbitSpringConfiguration
             stageBuilder.localAddressCacheMaximumSize(properties.getLocalAddressCacheMaximumSize());
         }
 
+        if(properties.getBroadcastActorDeactivations() != null)
+        {
+            stageBuilder.broadcastActorDeactivations(properties.getBroadcastActorDeactivations());
+        }
+
         return stageBuilder.build();
     }
 }
