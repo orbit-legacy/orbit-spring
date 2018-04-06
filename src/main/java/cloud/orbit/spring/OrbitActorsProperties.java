@@ -50,6 +50,7 @@ public class OrbitActorsProperties
     private Long localAddressCacheTTLInMilliseconds;
     private Integer localAddressCacheMaximumSize;
     private Boolean broadcastActorDeactivations;
+    private Boolean autostartStage = Boolean.TRUE;
 
 
     public List<String> getBasePackages()
@@ -180,5 +181,15 @@ public class OrbitActorsProperties
     public void setBroadcastActorDeactivations(Boolean broadcastActorDeactivations)
     {
         this.broadcastActorDeactivations = broadcastActorDeactivations;
+    }
+
+    public Boolean getAutostartStage()
+    {
+        return autostartStage;
+    }
+
+    public void setAutostartStage(Boolean autostartStage)
+    {
+        this.autostartStage = autostartStage;
     }
 }
