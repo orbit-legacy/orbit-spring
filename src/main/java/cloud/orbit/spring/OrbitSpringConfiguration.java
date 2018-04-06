@@ -132,8 +132,11 @@ public class OrbitSpringConfiguration
             configAddons.forEach(addon -> addon.configure(stage));
         }
 
-        stage.start().join();
-        stage.bind();
+        if (properties.getAutostartStage())
+        {
+            stage.start().join();
+            stage.bind();
+        }
 
         return stage;
     }
