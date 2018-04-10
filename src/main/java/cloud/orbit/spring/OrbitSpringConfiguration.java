@@ -161,6 +161,7 @@ public class OrbitSpringConfiguration
                 .invocationHandler(invocationHandler)
                 .timer(stageTimer)
                 .clusterName(properties.getClusterName())
+                .placementGroup(properties.getPlacementGroup())
                 .nodeName(properties.getNodeName());
 
         if (actorExtensions != null)
