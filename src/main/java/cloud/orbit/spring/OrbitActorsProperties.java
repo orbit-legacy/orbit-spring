@@ -39,6 +39,7 @@ public class OrbitActorsProperties
 {
     private List<String> basePackages;
     private String clusterName;
+    private String placementGroup;
     private String nodeName;
     private Stage.StageMode stageMode;
     private Long messagingTimeoutInMilliseconds;
@@ -71,6 +72,14 @@ public class OrbitActorsProperties
     public void setClusterName(String clusterName)
     {
         this.clusterName = clusterName;
+    }
+
+    public String getPlacementGroup() {
+        return placementGroup;
+    }
+
+    public void setPlacementGroup(String placementGroup) {
+        this.placementGroup = placementGroup;
     }
 
     public String getNodeName()
