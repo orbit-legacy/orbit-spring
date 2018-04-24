@@ -51,6 +51,7 @@ public class OrbitActorsProperties
     private Long localAddressCacheTTLInMilliseconds;
     private Integer localAddressCacheMaximumSize;
     private Boolean broadcastActorDeactivations;
+    private Boolean enableShutdownHook;
     private Boolean autostartStage = Boolean.TRUE;
 
 
@@ -192,6 +193,16 @@ public class OrbitActorsProperties
         this.broadcastActorDeactivations = broadcastActorDeactivations;
     }
 
+    public Boolean getEnableShutdownHook()
+    {
+        return enableShutdownHook;
+    }
+
+    public void setEnableShutdownHook(Boolean enableShutdownHook)
+    {
+        this.enableShutdownHook = enableShutdownHook;
+    }
+
     public Boolean getAutostartStage()
     {
         return autostartStage;
@@ -201,4 +212,6 @@ public class OrbitActorsProperties
     {
         this.autostartStage = autostartStage;
     }
+
+
 }

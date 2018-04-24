@@ -219,6 +219,11 @@ public class OrbitSpringConfiguration
             stageBuilder.broadcastActorDeactivations(properties.getBroadcastActorDeactivations());
         }
 
+        if(properties.getEnableShutdownHook() != null)
+        {
+            stageBuilder.enableShutdownHook(properties.getEnableShutdownHook());
+        }
+
         return stageBuilder.build();
     }
 }
